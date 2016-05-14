@@ -720,17 +720,17 @@ static int oregon_scientific_v3_parser(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 		 fprintf(stderr,"Weather Sensor THGR810  Channel %d Temp: %3.1f°C  %3.1f°F   Humidity: %d%%\n", channel, temp_c, ((temp_c*9)/5)+32, humidity);
 	   }
 	   return 1;
-    } else if ((msg[0] >= 0x50) && (msg[0] <= 0x59) && (msg[1] & 0x01 == 0x01 ) ) 
-     { 
-	     unsigned char rolling_code = ((msg[1] << 4)&0xF0) | ((msg[2] >> 4)&0x0F);
-         int battery_low = ((msg[1] >> 5) & 0x01);       
-         float rawAmp = ((msg[4] >> 4 << 8 | (msg[3] & 0x0f )<< 4 | msg[3] >> 4)-1)*3.5; 
-			fprintf(stderr, "Energy Sensor OWL CM160, Battery: %s, Rolling-code: 0x%0X, ", battery_low?"Low":"Ok", rolling_code);
-         fprintf(stderr, "Current: %.3f A, Electric power (230V): %.0f W\n", rawAmp/100, 230*rawAmp/100);
-         fprintf(stderr, "Message: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", msg[i]); fprintf(stderr, "\n\n");
+    } else if ((msg[0] >= 0x50) && (msg[0] <= 0x59) && (msg[1] & 0x01 == 0x01 ) ) {
+      if ((msg[11] != 0x00) || (msg[12] != 0x00) || (msg[13] != 0x00)) { // this should be CRC checking, but for now it has to be enough
+        unsigned char rolling_code = ((msg[1] << 4)&0xF0) | ((msg[2] >> 4)&0x0F);
+        int battery_low = ((msg[1] >> 5) & 0x01);       
+        float rawAmp = ((msg[4] >> 4 << 8 | (msg[3] & 0x0f )<< 4 | msg[3] >> 4)-1)*3.5; 
+  			fprintf(stderr, "Energy Sensor OWL CM160, Battery: %s, Rolling-code: 0x%0X, ", battery_low?"Low":"Ok", rolling_code);
+        fprintf(stderr, "Current: %.3f A, Electric power (230V): %.0f W\n", rawAmp/100, 230*rawAmp/100);
+        fprintf(stderr, "Message: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", msg[i]); fprintf(stderr, "\n\n");
 //         fprintf(stderr, "    Raw: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", bb[0][i]); fprintf(stderr, "\n");
-     } 
-     else if ((msg[0] != 0) && (msg[1]!= 0)) { //  sync nibble was found  and some data is present...
+      }
+    } else if ((msg[0] != 0) && (msg[1]!= 0)) { //  sync nibble was found  and some data is present...
 fprintf(stderr, "Message received from unrecognized Oregon Scientific v3 sensor.\n");	
 fprintf(stderr, "Message: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", msg[i]); fprintf(stderr, "\n");
 fprintf(stderr, "    Raw: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", bb[0][i]); fprintf(stderr,"\n\n");       
