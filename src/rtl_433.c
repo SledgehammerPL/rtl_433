@@ -615,10 +615,8 @@ static int oregon_scientific_v2_1_parser(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 		}
 		return 1;
 	} else if ((sensor_id == 0xacc3) || (sensor_id == 0xdcc3) || (sensor_id == 0xbcc3) || (sensor_id == 0x9cc3) || (sensor_id == 0xccc3))	{
-	   if (validate_os_v2_message(msg, 153, num_valid_v2_bits, 15) == 0) {
+	   if (validate_os_v2_message(msg, 223, num_valid_v2_bits, 15) == 0) {
          int  channel = ((msg[2] >> 4)&0x0f);
-	     if (channel == 4)
-	       channel = 3; // sensor 3 channel number is 0x04
          int battery_low = (msg[3] >> 2 & 0x01);       
 		 unsigned char rolling_code = ((msg[2] << 4)&0xF0) | ((msg[3] >> 4)&0x0F);
          float temp_c = get_os_temperature(msg, sensor_id);
@@ -716,10 +714,8 @@ static int oregon_scientific_v3_parser(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 	     unsigned char rolling_code = ((msg[1] << 4)&0xF0) | ((msg[2] >> 4)&0x0F);
          int battery_low = (msg[2] >> 2 & 0x01);       
          float rawAmp = (msg[4] >> 4 << 8 | (msg[3] & 0x0f )<< 4 | msg[3] >> 4); 
-         float Amp=rawAmp*3.5/100;
-         float Watt=Amp*230;
 			fprintf(stderr, "Energy Sensor OWL CM160, Battery: %s, Rolling-code: 0x%0X, ", battery_low?"Low":"Ok", rolling_code);
-         fprintf(stderr, "Current: %.3f A, Electric power (230V): %.0f W\n", Amp, Watt);
+         fprintf(stderr, "Current: %.3f A, Electric power (230V): %.0f W\n", rawAmp/100, rawAmp /(0.7*230)*1000);
          fprintf(stderr, "Message: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", msg[i]); fprintf(stderr, "\n\n");
 //         fprintf(stderr, "    Raw: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", bb[0][i]); fprintf(stderr, "\n");
      } 
