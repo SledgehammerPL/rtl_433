@@ -614,7 +614,18 @@ static int oregon_scientific_v2_1_parser(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 			fprintf(stderr, "Temp: %3.1f°C  %3.1f°F\n", temp_c, ((temp_c*9)/5)+32);
 		}
 		return 1;
-	} else if ((sensor_id == 0xacc3) || (sensor_id == 0xdcc3) || (sensor_id == 0xbcc3) || (sensor_id == 0x9cc3) || (sensor_id == 0xccc3))	{
+	} else if (num_valid_v2_bits==153 &&((sensor_id == 0xacc3) || (sensor_id == 0xdcc3) || (sensor_id == 0xbcc3) || (sensor_id == 0x9cc3) || (sensor_id == 0xccc3)))	{
+	   if (validate_os_v2_message(msg, 153, num_valid_v2_bits, 15) == 0) {
+         int  channel = ((msg[2] >> 4)&0x0f);
+         int battery_low = (msg[3] >> 2 & 0x01);       
+		 unsigned char rolling_code = ((msg[2] << 4)&0xF0) | ((msg[3] >> 4)&0x0F);
+         float temp_c = get_os_temperature(msg, sensor_id);
+		 fprintf(stderr, "Weather Sensor THGR328N/RTGR328N Outdoor, Channel %d, Battery: %s, Rolling-code: 0x%0X, ", channel, battery_low?"Low":"Ok", rolling_code); 
+		 fprintf(stderr, "Temp: %3.1f°C  %3.1f°F   Humidity: %d%%\n", temp_c, ((temp_c*9)/5)+32,get_os_humidity(msg, sensor_id));
+fprintf(stderr, "Message: "); for (i=0 ; i<20 ; i++) fprintf(stderr, "%02x ", msg[i]); fprintf(stderr,"\n\n");
+	   }
+	   return 1; 
+	} else if (num_valid_v2_bits==223 && ((sensor_id == 0xacc3) || (sensor_id == 0xdcc3) || (sensor_id == 0xbcc3) || (sensor_id == 0x9cc3) || (sensor_id == 0xccc3)))	{
 	   if (validate_os_v2_message(msg, 223, num_valid_v2_bits, 15) == 0) {
          int  channel = ((msg[2] >> 4)&0x0f);
          int battery_low = (msg[3] >> 2 & 0x01);       
@@ -712,10 +723,10 @@ static int oregon_scientific_v3_parser(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     } else if ((msg[0] >= 0x50) && (msg[0] <= 0x59) && (msg[1] & 0x01 == 0x01 ) ) 
      { 
 	     unsigned char rolling_code = ((msg[1] << 4)&0xF0) | ((msg[2] >> 4)&0x0F);
-         int battery_low = (msg[2] >> 2 & 0x01);       
-         float rawAmp = (msg[4] >> 4 << 8 | (msg[3] & 0x0f )<< 4 | msg[3] >> 4); 
+         int battery_low = ((msg[1] >> 5) & 0x01);       
+         float rawAmp = ((msg[4] >> 4 << 8 | (msg[3] & 0x0f )<< 4 | msg[3] >> 4)-1)*3.5; 
 			fprintf(stderr, "Energy Sensor OWL CM160, Battery: %s, Rolling-code: 0x%0X, ", battery_low?"Low":"Ok", rolling_code);
-         fprintf(stderr, "Current: %.3f A, Electric power (230V): %.0f W\n", rawAmp/100, rawAmp /(0.7*230)*1000);
+         fprintf(stderr, "Current: %.3f A, Electric power (230V): %.0f W\n", rawAmp/100, 230*rawAmp/100);
          fprintf(stderr, "Message: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", msg[i]); fprintf(stderr, "\n\n");
 //         fprintf(stderr, "    Raw: "); for (i=0 ; i<BITBUF_COLS ; i++) fprintf(stderr, "%02x ", bb[0][i]); fprintf(stderr, "\n");
      } 
