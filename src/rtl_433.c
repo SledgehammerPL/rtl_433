@@ -721,7 +721,7 @@ static int oregon_scientific_v3_parser(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 	   }
 	   return 1;
     } else if ((msg[0] >= 0x50) && (msg[0] <= 0x59) && (msg[1] & 0x01 == 0x01 ) ) {
-      if ((msg[11] != 0x00) || (msg[12] != 0x00) || (msg[13] != 0x00)) { // this should be CRC checking, but for now it has to be enough
+      if (((msg[11] != 0x00) || (msg[12] != 0x00) || (msg[13] != 0x00)) && msg[14]==0x00) { // this should be CRC checking, but for now it has to be enough
         unsigned char rolling_code = ((msg[1] << 4)&0xF0) | ((msg[2] >> 4)&0x0F);
         int battery_low = ((msg[1] >> 5) & 0x01);       
         float rawAmp = ((msg[4] >> 4 << 8 | (msg[3] & 0x0f )<< 4 | msg[3] >> 4)-1)*3.5; 
